@@ -46,7 +46,7 @@ export default App;
 function Loader() {
   return (
     <div className="loader">
-      <div data-glitch="Loading..." className="glitch"></div>
+      <p>Loading...</p>
     </div>
   );
 }
