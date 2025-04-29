@@ -1,3 +1,4 @@
+import { func } from "prop-types";
 import React, { useEffect } from "react";
 import { useState } from "react";
 
@@ -11,7 +12,15 @@ const App = () => {
   const [isLoadind, setIsLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
-  const tempQuery = "home alone";
+  const [selectedId, setSelectedId] = useState(null);
+
+  function handleSelectedMovie(id) {
+    setSelectedId((selectedId) => (id === selectedId ? null : id));
+  }
+
+  function handleClose() {
+    setSelectedId(null);
+  }
 
   useEffect(
     function () {
@@ -50,12 +59,18 @@ const App = () => {
       <Main>
         <Box>
           {isLoadind && <Loader />}
-          {!isLoadind && !error && <MovieList movies={movies} />}
+          {!isLoadind && !error && <MovieList handleSelectedMovie={handleSelectedMovie} movies={movies} />}
           {error && <ErrorMessage message={error} />}
         </Box>
         <Box>
-          <WatchedSummary watched={watched} />
-          <WatchedList watched={watched} />
+          {selectedId ? (
+            <MovieDetails selectedId={selectedId} handleClose={handleClose} />
+          ) : (
+            <>
+              <WatchedSummary watched={watched} />
+              <WatchedList watched={watched} />
+            </>
+          )}
         </Box>
       </Main>
     </>
@@ -119,6 +134,17 @@ function WatchedList({ watched }) {
   );
 }
 
+function MovieDetails({ selectedId, handleClose }) {
+  return (
+    <div className="details">
+      <button className="btn-back" onClick={handleClose}>
+        X
+      </button>
+      {selectedId}
+    </div>
+  );
+}
+
 function WatchedListMovie({ movie }) {
   return (
     <li>
@@ -176,26 +202,26 @@ function Box({ children }) {
   return (
     <div className="box">
       <button className="btn-toggle" onClick={() => setIsOpen((open) => !open)}>
-        {isOpen ? "–" : "+"}
+        {isOpen ? "`–" : "+"}
       </button>
       {isOpen && children}
     </div>
   );
 }
 
-function MovieList({ movies }) {
+function MovieList({ movies, handleSelectedMovie }) {
   return (
-    <ul className="list">
+    <ul className="list list-movies">
       {movies?.map((movie) => (
-        <Movie movie={movie} key={movie.imdbID} />
+        <Movie movie={movie} key={movie.imdbID} handleSelectedMovie={handleSelectedMovie} />
       ))}
     </ul>
   );
 }
 
-function Movie({ movie }) {
+function Movie({ movie, handleSelectedMovie }) {
   return (
-    <li>
+    <li onClick={() => handleSelectedMovie(movie.imdbID)}>
       <img src={movie.Poster} alt={`${movie.Title} poster`} />
       <h3>{movie.Title}</h3>
       <div>
