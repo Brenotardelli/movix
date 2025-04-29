@@ -9,16 +9,24 @@ const App = () => {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoadind, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const query = "home alone";
 
   useEffect(function () {
     async function fetchMovies() {
-      setIsLoading(true);
-      const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`);
-      const data = await res.json();
-      setMovies(data.Search);
-      setIsLoading(false);
+      try {
+        setIsLoading(true);
+        const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`);
+        if (!res.ok) throw new Error("Something went wrong, please try again or check your internet conection");
+        const data = await res.json();
+        if (data.Response === "False") throw new Error("Movie not found");
+        setMovies(data.Search);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
     }
     fetchMovies();
   }, []);
@@ -31,7 +39,12 @@ const App = () => {
         <Results movies={movies} />
       </NavBar>
       <Main>
-        <Box>{isLoadind ? <Loader /> : <MovieList movies={movies} />}</Box>
+        <Box>
+          {/* {isLoadind ? <Loader /> : <MovieList movies={movies} />} */}
+          {isLoadind && <Loader />}
+          {!isLoadind && !error && <MovieList movies={movies} />}
+          {error && <ErrorMessage message={error} />}
+        </Box>
         <Box>
           <WatchedSummary watched={watched} />
           <WatchedList watched={watched} />
@@ -51,6 +64,15 @@ function Loader() {
   );
 }
 
+function ErrorMessage({ message }) {
+  return (
+    <p className="error">
+      <span>🚫</span>
+      {message}
+    </p>
+  );
+}
+
 function NavBar({ children }) {
   return <nav className="nav-bar">{children}</nav>;
 }
@@ -66,8 +88,7 @@ function Results({ movies }) {
 function Logo() {
   return (
     <div className="logo">
-      <span role="img">🍿</span>
-      <h1>usePopcorn</h1>
+      <h1>Movix</h1>
     </div>
   );
 }
