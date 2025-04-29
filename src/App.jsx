@@ -9,38 +9,46 @@ const App = () => {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoadind, setIsLoading] = useState(false);
+  const [query, setQuery] = useState("");
   const [error, setError] = useState("");
+  const tempQuery = "home alone";
 
-  const query = "home alone";
-
-  useEffect(function () {
-    async function fetchMovies() {
-      try {
-        setIsLoading(true);
-        const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`);
-        if (!res.ok) throw new Error("Something went wrong, please try again or check your internet conection");
-        const data = await res.json();
-        if (data.Response === "False") throw new Error("Movie not found");
-        setMovies(data.Search);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
+  useEffect(
+    function () {
+      async function fetchMovies() {
+        try {
+          setIsLoading(true);
+          setError("");
+          const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`);
+          if (!res.ok) throw new Error("Something went wrong, please try again or check your internet conection");
+          const data = await res.json();
+          if (data.Response === "False") throw new Error("Movie not found");
+          setMovies(data.Search);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setIsLoading(false);
+        }
       }
-    }
-    fetchMovies();
-  }, []);
+      if (query.length < 3) {
+        setMovies([]);
+        setError("");
+        return;
+      }
+      fetchMovies();
+    },
+    [query]
+  );
 
   return (
     <>
       <NavBar>
         <Logo />
-        <Input />
+        <Input query={query} setQuery={setQuery} />
         <Results movies={movies} />
       </NavBar>
       <Main>
         <Box>
-          {/* {isLoadind ? <Loader /> : <MovieList movies={movies} />} */}
           {isLoadind && <Loader />}
           {!isLoadind && !error && <MovieList movies={movies} />}
           {error && <ErrorMessage message={error} />}
@@ -93,8 +101,7 @@ function Logo() {
   );
 }
 
-function Input() {
-  const [query, setQuery] = useState("");
+function Input({ query, setQuery }) {
   return <input className="search" type="text" placeholder="Search movies..." value={query} onChange={(e) => setQuery(e.target.value)} />;
 }
 
