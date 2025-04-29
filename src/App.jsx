@@ -15,7 +15,8 @@ const App = () => {
   const [selectedId, setSelectedId] = useState(null);
 
   function handleSelectedMovie(id) {
-    setSelectedId((selectedId) => (id === selectedId ? null : id));
+    // setSelectedId((selectedId) => (id === selectedId ? null : id));
+    setSelectedId(id);
   }
 
   function handleClose() {
