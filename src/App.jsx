@@ -167,6 +167,17 @@ function MovieDetails({ selectedId, handleClose, handleAddWatched, watched }) {
     [selectedId]
   );
 
+  useEffect(
+    function () {
+      if (!title) return;
+      document.title = title;
+      return function () {
+        document.title = "Movix";
+      };
+    },
+    [title]
+  );
+
   function handleAdd() {
     const newWatchMovie = {
       imdbID: selectedId,
