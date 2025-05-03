@@ -1,7 +1,7 @@
 import { func } from "prop-types";
-import React, { useEffect, useRef } from "react";
-import { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
+import useMovies from "./useMovies";
 
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
@@ -9,11 +9,9 @@ const average = (arr) =>
 const KEY = "28ea815c";
 
 const App = () => {
-  const [movies, setMovies] = useState([]);
-  const [isLoadind, setIsLoading] = useState(false);
   const [query, setQuery] = useState("");
-  const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
+  const { movies, isLoading, error } = useMovies(query, handleClose);
   const [watched, setWatched] = useState(function () {
     const storedValue = localStorage.getItem("watched");
     return storedValue ? JSON.parse(storedValue) : [];
@@ -42,48 +40,6 @@ const App = () => {
     [watched]
   );
 
-  useEffect(
-    function () {
-      const controller = new AbortController();
-      async function fetchMovies() {
-        try {
-          setIsLoading(true);
-          setError("");
-          const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
-            { signal: controller.signal }
-          );
-          if (!res.ok)
-            throw new Error(
-              "Something went wrong, please try again or check your internet conection"
-            );
-          const data = await res.json();
-          if (data.Response === "False") throw new Error("Movie not found");
-          setMovies(data.Search);
-        } catch (err) {
-          if (err.name !== "AbortError") {
-            setError(err.message);
-          }
-          setError("");
-        } finally {
-          setIsLoading(false);
-        }
-      }
-      if (query.length < 3) {
-        setMovies([]);
-        setError("");
-        return;
-      }
-      handleClose();
-      fetchMovies();
-
-      return function () {
-        controller.abort();
-      };
-    },
-    [query]
-  );
-
   return (
     <>
       <NavBar>
@@ -93,8 +49,8 @@ const App = () => {
       </NavBar>
       <Main>
         <Box>
-          {isLoadind && <Loader />}
-          {!isLoadind && !error && (
+          {isLoading && <Loader />}
+          {!isLoading && !error && (
             <MovieList
               handleSelectedMovie={handleSelectedMovie}
               movies={movies}
@@ -211,7 +167,7 @@ function WatchedList({ watched, handleDeleteWatched }) {
 
 function MovieDetails({ selectedId, handleClose, handleAddWatched, watched }) {
   const [movie, setMovie] = useState({});
-  const [isLoadind, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState("");
 
   const isWatched = watched.map((movie) => movie.imdbID).includes(selectedId);
@@ -293,7 +249,7 @@ function MovieDetails({ selectedId, handleClose, handleAddWatched, watched }) {
 
   return (
     <div className="details">
-      {isLoadind ? (
+      {isLoading ? (
         <Loader />
       ) : (
         <>
